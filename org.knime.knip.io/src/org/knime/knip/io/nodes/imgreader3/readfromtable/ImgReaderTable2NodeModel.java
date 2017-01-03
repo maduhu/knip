@@ -1,6 +1,7 @@
 package org.knime.knip.io.nodes.imgreader3.readfromtable;
 
 import java.io.File;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -96,8 +97,7 @@ public class ImgReaderTable2NodeModel<T extends RealType<T> & NativeType<T>> ext
 
 		for (final DataRow row : in) {
 			exec.checkCanceled();
-
-			final ScifioReadResult<T> res = reader.read(row);
+			final ScifioReadResult<T> res = reader.read(((URIDataValue)row.getCell(uriColIdx)).getURIContent().getURI());
 			res.getRows().forEach(container::addRowToTable);
 
 			// errors during execution
