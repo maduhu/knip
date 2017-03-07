@@ -1,4 +1,4 @@
-package org.knime.knip.io.nodes.imgreader3.readfromtable;
+package org.knime.knip.io.nodes.imgreader3.table;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
@@ -8,12 +8,12 @@ import org.knime.knip.cellviewer.CellNodeView;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 
-public class ImgReaderTable2NodeFactory<T extends NativeType<T> & RealType<T>>
-		extends NodeFactory<ImgReaderTable2NodeModel<T>> {
+public class ImgReader3TableNodeFactory<T extends NativeType<T> & RealType<T>>
+		extends NodeFactory<ImgReader3TableNodeModel<T>> {
 
 	@Override
-	public ImgReaderTable2NodeModel<T> createNodeModel() {
-		return new ImgReaderTable2NodeModel<>();
+	public ImgReader3TableNodeModel<T> createNodeModel() {
+		return new ImgReader3TableNodeModel<>();
 	}
 
 	@Override
@@ -22,8 +22,8 @@ public class ImgReaderTable2NodeFactory<T extends NativeType<T> & RealType<T>>
 	}
 
 	@Override
-	public NodeView<ImgReaderTable2NodeModel<T>> createNodeView(final int viewIndex,
-			final ImgReaderTable2NodeModel<T> nodeModel) {
+	public NodeView<ImgReader3TableNodeModel<T>> createNodeView(final int viewIndex,
+			final ImgReader3TableNodeModel<T> nodeModel) {
 		return new CellNodeView<>(nodeModel);
 	}
 
@@ -34,7 +34,7 @@ public class ImgReaderTable2NodeFactory<T extends NativeType<T> & RealType<T>>
 
 	@Override
 	protected NodeDialogPane createNodeDialogPane() {
-		return new ImgReaderTable2NodeDialog();
+		return new ImgReader3TableNodeDialog();
 	}
 
 }
