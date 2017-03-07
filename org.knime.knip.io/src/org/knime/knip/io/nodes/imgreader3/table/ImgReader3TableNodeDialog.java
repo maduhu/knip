@@ -1,4 +1,4 @@
-package org.knime.knip.io.nodes.imgreader3.readfromtable;
+package org.knime.knip.io.nodes.imgreader3.table;
 
 import org.knime.core.data.uri.URIDataValue;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
@@ -10,12 +10,12 @@ import org.knime.knip.io.nodes.imgreader3.AbstractImgReaderNodeDialog;
 import org.knime.knip.io.nodes.imgreader3.ImgReaderSettings;
 import org.knime.knip.io.nodes.imgreader3.ImgReaderSettings.ColumnCreationMode;
 
-public class ImgReaderTable2NodeDialog extends AbstractImgReaderNodeDialog {
+public class ImgReader3TableNodeDialog extends AbstractImgReaderNodeDialog {
 
 	private final SettingsModelString fileURIColumnModel;
 
 	@SuppressWarnings("unchecked")
-	public ImgReaderTable2NodeDialog() {
+	public ImgReader3TableNodeDialog() {
 		super();
 
 		createNewGroup("File Input Column");

@@ -1,4 +1,4 @@
-package org.knime.knip.io.nodes.imgreader3.readfromtable;
+package org.knime.knip.io.nodes.imgreader3.table;
 
 import java.io.File;
 import java.net.URI;
@@ -49,11 +49,11 @@ import org.knime.knip.io.nodes.imgreader3.ScifioReadResult;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 
-public class ImgReaderTable2NodeModel<T extends RealType<T> & NativeType<T>> extends AbstractImgReaderNodeModel<T> {
+public class ImgReader3TableNodeModel<T extends RealType<T> & NativeType<T>> extends AbstractImgReaderNodeModel<T> {
 
 	private static final int CONNECTION_PORT = 0;
 	private static final int DATA_PORT = 0;
-	protected static final NodeLogger LOGGER = NodeLogger.getLogger(ImgReaderTable2NodeModel.class);
+	protected static final NodeLogger LOGGER = NodeLogger.getLogger(ImgReader3TableNodeModel.class);
 
 	/** Settings Models */
 	private final SettingsModelColumnName filenameColumnModel = ImgReaderSettings.createFileURIColumnModel();
@@ -62,7 +62,7 @@ public class ImgReaderTable2NodeModel<T extends RealType<T> & NativeType<T>> ext
 
 	private boolean useRemote;
 
-	protected ImgReaderTable2NodeModel() {
+	protected ImgReader3TableNodeModel() {
 		super(new PortType[] { ConnectionInformationPortObject.TYPE_OPTIONAL, BufferedDataTable.TYPE },
 				new PortType[] { BufferedDataTable.TYPE });
 
@@ -196,7 +196,7 @@ public class ImgReaderTable2NodeModel<T extends RealType<T> & NativeType<T>> ext
 
 	private int getUriColIdx(final PortObjectSpec inSpec) throws InvalidSettingsException {
 		return NodeUtils.autoColumnSelection((DataTableSpec) inSpec, filenameColumnModel, URIDataValue.class,
-				ImgReaderTable2NodeModel.class);
+				ImgReader3TableNodeModel.class);
 	}
 
 	@Override
