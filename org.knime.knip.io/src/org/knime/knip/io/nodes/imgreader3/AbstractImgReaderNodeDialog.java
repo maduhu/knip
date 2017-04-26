@@ -89,6 +89,8 @@ public abstract class AbstractImgReaderNodeDialog extends DefaultNodeSettingsPan
 		final SettingsModelDoubleRange seriesSelectionRangeModel = ImgReaderSettings.createSeriesSelectionRangeModel();
 		addDialogComponent(new DialogComponentBoolean(readAllSeriesModel, "Read all series"));
 		addDialogComponent(new DialogComponentDoubleRange(seriesSelectionRangeModel, 0, Short.MAX_VALUE, 1, "Series index"));
+		
+		addDialogComponent(new DialogComponentBoolean(ImgReaderSettings.createAppendSeriesNumberModel(), "Append series number"));
 
 		readAllSeriesModel.addChangeListener(e -> seriesSelectionRangeModel.setEnabled(!readAllSeriesModel.getBooleanValue()));
 		seriesSelectionRangeModel.setEnabled(!readAllSeriesModel.getBooleanValue());

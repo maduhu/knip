@@ -41,6 +41,7 @@ public class ScifioImgReader<T extends RealType<T> & NativeType<T>> {
 	private final ImgFactory<T> imgFactory;
 	private final MetadataMode metaDataMode;
 	private final ColumnCreationMode columnCreationMode;
+	private boolean appendSeriesNumber;
 
 	// public ScifioImgReader(ImgFactory<T> imgFactory, boolean checkFileFormat,
 	// SCIFIOConfig config,
@@ -76,18 +77,20 @@ public class ScifioImgReader<T extends RealType<T> & NativeType<T>> {
 		final List<DataRow> rows = null;
 
 		// if (connectionInfo == null) {
-		String metData;
+		String metaData;
 		final boolean readImages = true; // FIXME
 		final boolean readMetaData = false;
 
 		try {
 
 			if (readMetaData) {
-				metData = source.getOMEXMLMetadata(uri);
+				metaData = source.getOMEXMLMetadata(uri);
 			}
 			if (readImages) {
 				imgs = source.readImgs(uri);
-
+			}
+			if (appendSeriesNumber){
+				source.ser
 			}
 
 			// rows = makeRows(readImages, row, colMode);
@@ -132,7 +135,7 @@ public class ScifioImgReader<T extends RealType<T> & NativeType<T>> {
 		private ImgFactory<T> imgFactory;
 		private MetadataMode metaDataMode;
 		private ColumnCreationMode columnCreationMode;
-
+		private boolean appendSeriesNumber;
 
 		public ScifioReaderBuilder<T> connectionInfo(final ConnectionInformation connectionInfo) {
 			this.connectionInfo = connectionInfo;
@@ -169,6 +172,11 @@ public class ScifioImgReader<T extends RealType<T> & NativeType<T>> {
 			return this;
 		}
 
+		public ScifioReaderBuilder<T> appendSeriesNumber(boolean appendSeriesNumber) {
+			this.appendSeriesNumber = appendSeriesNumber;
+			return this;
+		}
+
 		public ScifioImgReader<T> build() {
 			return new ScifioImgReader<>(this);
 		}
@@ -182,9 +190,9 @@ public class ScifioImgReader<T extends RealType<T> & NativeType<T>> {
 		this.imgFactory = builder.imgFactory;
 		this.metaDataMode = builder.metaDataMode;
 		this.columnCreationMode = builder.columnCreationMode;
-		
-		
-		 source = new ScifioImgSource2(imgFactory, checkFileFormat, null); // FIXME
-		 cellFactory = new ImgPlusCellFactory(exec);
+		this.appendSeriesNumber = builder.appendSeriesNumber;
+
+		source = new ScifioImgSource2(imgFactory, checkFileFormat, null); // FIXME
+		cellFactory = new ImgPlusCellFactory(exec);
 	}
 }

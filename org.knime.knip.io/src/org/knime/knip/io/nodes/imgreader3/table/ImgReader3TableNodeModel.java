@@ -12,7 +12,9 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataTableSpecCreator;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.def.StringCell;
 import org.knime.core.data.uri.URIDataValue;
 import org.knime.core.data.xml.XMLCell;
 import org.knime.core.node.BufferedDataContainer;
@@ -21,6 +23,7 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelColumnName;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObject;
@@ -59,6 +62,7 @@ public class ImgReader3TableNodeModel<T extends RealType<T> & NativeType<T>> ext
 	private final SettingsModelColumnName filenameColumnModel = ImgReaderSettings.createFileURIColumnModel();
 	private final SettingsModelString columnCreationModeModel = ImgReaderSettings.createColumnCreationModeModel();
 	private final SettingsModelString columnSuffixModel = ImgReaderSettings.createColumnSuffixNodeModel();
+	private final SettingsModelBoolean appendSeriesNumberModel = ImgReaderSettings.createAppendSeriesNumberModel();
 
 	private boolean useRemote;
 
@@ -97,7 +101,8 @@ public class ImgReader3TableNodeModel<T extends RealType<T> & NativeType<T>> ext
 
 		for (final DataRow row : in) {
 			exec.checkCanceled();
-			final ScifioReadResult<T> res = reader.read(((URIDataValue)row.getCell(uriColIdx)).getURIContent().getURI());
+			final ScifioReadResult<T> res = reader
+					.read(((URIDataValue) row.getCell(uriColIdx)).getURIContent().getURI());
 			res.getRows().forEach(container::addRowToTable);
 
 			// errors during execution
@@ -134,57 +139,74 @@ public class ImgReader3TableNodeModel<T extends RealType<T> & NativeType<T>> ext
 		final DataTableSpec outSpec;
 		if (columnCreationMode == ColumnCreationMode.NEW_TABLE) {
 
-			final DataColumnSpec imgSpec = new DataColumnSpecCreator("Image", ImgPlusCell.TYPE).createSpec();
-			final DataColumnSpec omeSpec = new DataColumnSpecCreator("OME-XML Metadata", XMLCell.TYPE).createSpec();
+			DataTableSpecCreator specBuilder = new DataTableSpecCreator();
 
-			if (readImage && readMetadata) {
-				outSpec = new DataTableSpec(imgSpec, omeSpec);
-			} else if (readImage) {
-				outSpec = new DataTableSpec(imgSpec);
-			} else {
-				outSpec = new DataTableSpec(omeSpec);
+			if (readImage) {
+				specBuilder.addColumns(new DataColumnSpecCreator("Image", ImgPlusCell.TYPE).createSpec());
 			}
+			if (readMetadata) {
+				specBuilder.addColumns(new DataColumnSpecCreator("OME-XML Metadata", XMLCell.TYPE).createSpec());
+			}
+			if (readAllSeriesModel.getBooleanValue()) {
+				specBuilder.addColumns(new DataColumnSpecCreator("Series Number", StringCell.TYPE).createSpec());
+			}
+
+			outSpec = specBuilder.createSpec();
 
 		} else { // Append and replace
 
 			final DataColumnSpec imgSpec = new DataColumnSpecCreator(
 					DataTableSpec.getUniqueColumnName(spec, "Image" + columnSuffixModel.getStringValue()),
 					ImgPlusCell.TYPE).createSpec();
-			final DataColumnSpec omeSpec = new DataColumnSpecCreator(
+			final DataColumnSpec metaDataSpec = new DataColumnSpecCreator(
 					DataTableSpec.getUniqueColumnName(spec, "OME-XML Metadata" + columnSuffixModel.getStringValue()),
 					XMLCell.TYPE).createSpec();
+			final DataColumnSpec seriesNumberSpec = new DataColumnSpecCreator(
+					DataTableSpec.getUniqueColumnName(spec, "Series Number"), StringCell.TYPE).createSpec();
 
-			final List<DataColumnSpec> columnSpecs = new ArrayList<>();
-			for (final DataColumnSpec s : spec) {
-				columnSpecs.add(s);
-			}
+			DataTableSpecCreator outSpecBuilder = new DataTableSpecCreator(spec);
 
 			if (columnCreationMode == ColumnCreationMode.APPEND) {
-
-				if (readImage && readMetadata) {
-					columnSpecs.add(imgSpec);
-					columnSpecs.add(omeSpec);
-				} else if (readImage) {
-					columnSpecs.add(imgSpec);
-				} else {
-					columnSpecs.add(omeSpec);
+				if (readImage) {
+					outSpecBuilder.addColumns(imgSpec);
+				}
+				if (readMetadata) {
+					outSpecBuilder.addColumns(metaDataSpec);
+				}
+				if (appendSeriesNumberModel.getBooleanValue()) {
+					outSpecBuilder.addColumns(seriesNumberSpec);
 				}
 
-				outSpec = new DataTableSpec(columnSpecs.toArray(new DataColumnSpec[columnSpecs.size()]));
+				outSpec = outSpecBuilder.createSpec();
 
 			} else if (columnCreationMode == ColumnCreationMode.REPLACE) {
 
-				if (readImage && readMetadata) {
-					// only the read images replace the URI column
-					columnSpecs.set(uriColIdx, imgSpec);
-					columnSpecs.add(uriColIdx + 1, omeSpec);
-				} else if (readImage) {
-					columnSpecs.set(uriColIdx, imgSpec);
-				} else {
-					columnSpecs.set(uriColIdx, omeSpec);
+				// As we can only replace the URI column, we append all
+				// additional columns.
+				boolean replaced = false;
+
+				if (readImage) {
+					// replaced is always false in this case
+					outSpecBuilder.replaceColumn(uriColIdx, imgSpec);
+					replaced = true;
+				}
+				if (readMetadata) {
+					if (!replaced) {
+						outSpecBuilder.replaceColumn(uriColIdx, metaDataSpec);
+						replaced = true;
+					} else {
+						outSpecBuilder.addColumns(metaDataSpec);
+					}
+				}
+				if (appendSeriesNumberModel.getBooleanValue()) {
+					if (!replaced) {
+						outSpecBuilder.replaceColumn(uriColIdx, seriesNumberSpec);
+					} else {
+						outSpecBuilder.addColumns(seriesNumberSpec);
+					}
 				}
 
-				outSpec = new DataTableSpec(columnSpecs.toArray(new DataColumnSpec[columnSpecs.size()]));
+				outSpec = outSpecBuilder.createSpec();
 			} else {
 				// should really not happen
 				throw new IllegalStateException("Support for the columncreation mode"
@@ -226,7 +248,7 @@ public class ImgReader3TableNodeModel<T extends RealType<T> & NativeType<T>> ext
 
 				// get next row from input
 				while ((row = in.poll()) != null) {
-					
+
 					// TODO Make less ugly?
 					final ScifioReadResult<T> res = reader
 							.read(((URIDataValue) row.getCell(uriColIdx)).getURIContent().getURI());
@@ -262,6 +284,7 @@ public class ImgReader3TableNodeModel<T extends RealType<T> & NativeType<T>> ext
 		builder.checkFileFormat(checkFileFormatModel.getBooleanValue());
 		builder.metaDataMode(EnumUtils.valueForName(metadataModeModel.getStringValue(), MetadataMode.values()));
 		builder.imgFactory(createImgFactory());
+		builder.appendSeriesNumber(appendSeriesNumberModel.getBooleanValue());
 
 		// connection info
 		builder.connectionInfo(connection.getConnectionInformation());

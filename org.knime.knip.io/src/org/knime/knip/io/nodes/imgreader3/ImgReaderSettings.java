@@ -123,7 +123,7 @@ public class ImgReaderSettings {
 	 * @return Model to store whether to read all meta data or not.
 	 */
 	public static SettingsModelBoolean createReadAllMetaDataModel() {
-		return new SettingsModelBoolean("read all metadata", false);
+		return new SettingsModelBoolean("Read all metadata", false);
 	}
 
 	public static SettingsModelColumnName createFileURIColumnModel() {
@@ -136,5 +136,9 @@ public class ImgReaderSettings {
 
 	public static SettingsModelString createColumnSuffixNodeModel() {
 		return new SettingsModelString("Column suffix ", "_read");
+	}
+
+	public static SettingsModelBoolean createAppendSeriesNumberModel() {
+		return new SettingsModelBoolean("Append series number", false);
 	}
 }
