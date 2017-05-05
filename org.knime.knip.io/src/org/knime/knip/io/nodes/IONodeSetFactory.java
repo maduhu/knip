@@ -62,6 +62,7 @@ import org.knime.knip.io.nodes.fileref.ImageFileRefNodeFactory;
 import org.knime.knip.io.nodes.imgimporter.ImgImporterNodeFactory;
 import org.knime.knip.io.nodes.imgreader2.readfromdialog.ImgReader2NodeFactory;
 import org.knime.knip.io.nodes.imgreader2.readfrominput.ImgReaderTableNodeFactory;
+import org.knime.knip.io.nodes.imgreader3.table.ImgReader3TableNodeFactory;
 import org.knime.knip.io.nodes.imgwriter2.ImgWriter2NodeFactory;
 
 /**
@@ -75,7 +76,7 @@ import org.knime.knip.io.nodes.imgwriter2.ImgWriter2NodeFactory;
  */
 public class IONodeSetFactory implements NodeSetFactory {
 
-	private final Map<String, String> m_nodeFactories = new HashMap<String, String>();
+	private final Map<String, String> m_nodeFactories = new HashMap<>();
 
 	/**
 	 * {@inheritDoc}
@@ -119,8 +120,8 @@ public class IONodeSetFactory implements NodeSetFactory {
 	 */
 	@Override
 	public Collection<String> getNodeFactoryIds() {
-		// m_nodeFactories.put(ImgReaderNodeFactory.class.getCanonicalName(),
-		// "/community/knip/io");
+		// m_nodeFactories.put(ImgReaderNodeFactory.class.getCanonicalName(), // "/community/knip/io");
+		m_nodeFactories.put(ImgReader3TableNodeFactory.class.getCanonicalName(), "/community/knip/io");
 		m_nodeFactories.put(ImgWriter2NodeFactory.class.getCanonicalName(), "/community/knip/io");
 		m_nodeFactories.put(ImageFileRefNodeFactory.class.getCanonicalName(), "/community/knip/io/other");
 		m_nodeFactories.put(ImgImporterNodeFactory.class.getCanonicalName(), "/community/knip/io/other");

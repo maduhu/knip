@@ -1,11 +1,13 @@
 package org.knime.knip.io.nodes.imgreader3.table;
 
 import java.io.File;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import net.imglib2.type.NativeType;
+import net.imglib2.type.numeric.RealType;
 
 import org.knime.base.filehandling.remote.connectioninformation.port.ConnectionInformationPortObject;
 import org.knime.core.data.DataColumnSpec;
@@ -49,13 +51,10 @@ import org.knime.knip.io.nodes.imgreader3.ScifioImgReader;
 import org.knime.knip.io.nodes.imgreader3.ScifioImgReader.ScifioReaderBuilder;
 import org.knime.knip.io.nodes.imgreader3.ScifioReadResult;
 
-import net.imglib2.type.NativeType;
-import net.imglib2.type.numeric.RealType;
-
 public class ImgReader3TableNodeModel<T extends RealType<T> & NativeType<T>> extends AbstractImgReaderNodeModel<T> {
 
 	private static final int CONNECTION_PORT = 0;
-	private static final int DATA_PORT = 0;
+	private static final int DATA_PORT = 1;
 	protected static final NodeLogger LOGGER = NodeLogger.getLogger(ImgReader3TableNodeModel.class);
 
 	/** Settings Models */
@@ -93,8 +92,7 @@ public class ImgReader3TableNodeModel<T extends RealType<T> & NativeType<T>> ext
 
 		ScifioImgReader<T> reader;
 		if (useRemote) {
-			reader = createRemoteScifioReader(exec, (ConnectionInformationPortObject) inObjects[CONNECTION_PORT],
-					uriColIdx);
+			reader = createScifioReader(exec, (ConnectionInformationPortObject) inObjects[CONNECTION_PORT], uriColIdx);
 		} else {
 			reader = createLocalScifioReader(exec);
 		}
@@ -241,7 +239,7 @@ public class ImgReader3TableNodeModel<T extends RealType<T> & NativeType<T>> ext
 				if (useRemote) {
 					final ConnectionInformationPortObject connection = (ConnectionInformationPortObject) ((PortObjectInput) inputs[CONNECTION_PORT])
 							.getPortObject();
-					reader = createRemoteScifioReader(exec, connection, uriColIdx);
+					reader = createScifioReader(exec, connection, uriColIdx);
 				} else {
 					reader = createLocalScifioReader(exec);
 				}
@@ -271,23 +269,25 @@ public class ImgReader3TableNodeModel<T extends RealType<T> & NativeType<T>> ext
 	}
 
 	private ScifioImgReader<T> createLocalScifioReader(final ExecutionContext exec) {
-		// TODO Auto-generated method stub
+
+		new ScifioReaderBuilder<>().appendSeriesNumber(true).build();
 		return null;
 	}
 
-	private ScifioImgReader<T> createRemoteScifioReader(final ExecutionContext exec,
+	private ScifioImgReader<T> createScifioReader(final ExecutionContext exec,
 			final ConnectionInformationPortObject connection, int uriColIdx) {
 
 		ScifioReaderBuilder<T> builder = new ScifioReaderBuilder<>();
 
 		// File settings
-		builder.checkFileFormat(checkFileFormatModel.getBooleanValue());
-		builder.metaDataMode(EnumUtils.valueForName(metadataModeModel.getStringValue(), MetadataMode.values()));
-		builder.imgFactory(createImgFactory());
-		builder.appendSeriesNumber(appendSeriesNumberModel.getBooleanValue());
+		builder.checkFileFormat(checkFileFormatModel.getBooleanValue())
+				.metaDataMode(EnumUtils.valueForName(metadataModeModel.getStringValue(), MetadataMode.values()))
+				.imgFactory(createImgFactory());
 
 		// connection info
-		builder.connectionInfo(connection.getConnectionInformation());
+		if (connection != null) {
+			builder.connectionInfo(connection.getConnectionInformation());
+		}
 
 		// Table settings
 		builder.exec(exec);

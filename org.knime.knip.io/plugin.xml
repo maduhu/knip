@@ -3,6 +3,7 @@
 <plugin>
    <extension-point id="IFormatReader" name="IFormatReader" schema="schema/IFormatReader.exsd"/>
    <extension-point id="ScifioFormat" name="ScifioFormat" schema="schema/ScifioFormat.exsd"/>
+   <extension-point id="ScijavaLocationProvider" name="ScijvaLocationProvider" schema="schema/ScijvaLocationProvider.exsd"/>
      <extension
            point="org.knime.workbench.repository.nodesets">
         <nodeset

@@ -53,6 +53,7 @@ import org.knime.scijava.core.ResourceAwareClassLoader;
 import org.scijava.Context;
 import org.scijava.cache.CacheService;
 import org.scijava.command.CommandService;
+import org.scijava.io.DataHandleService;
 import org.scijava.log.LogService;
 import org.scijava.module.ModuleService;
 import org.scijava.plugin.DefaultPluginFinder;
@@ -132,6 +133,8 @@ public class KNIPGateway {
     private static LogService m_log;
 
     private static CommandService m_commands;
+
+    private static DataHandleService m_handles;
 
     private final Context m_context;
 
@@ -221,6 +224,16 @@ public class KNIPGateway {
             m_commands = getInstance().m_context.getService(CommandService.class);
         }
         return m_commands;
+    }
+
+    /**
+     * @return singleton instance of {@link DataHandleService}
+     */
+    public static DataHandleService handles() {
+        if (m_handles == null) {
+            m_handles = getInstance().m_context.getService(DataHandleService.class);
+        }
+        return m_handles;
     }
 
     /**

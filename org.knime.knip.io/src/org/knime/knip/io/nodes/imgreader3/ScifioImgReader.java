@@ -1,26 +1,27 @@
 package org.knime.knip.io.nodes.imgreader3;
 
+import io.scif.config.SCIFIOConfig;
+
 import java.io.IOException;
 import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import net.imagej.ImgPlus;
+import net.imglib2.img.ImgFactory;
+import net.imglib2.type.NativeType;
+import net.imglib2.type.numeric.RealType;
+
 import org.knime.base.data.replace.ReplacedColumnsDataRow;
 import org.knime.base.filehandling.remote.connectioninformation.port.ConnectionInformation;
 import org.knime.core.data.DataRow;
-import org.knime.core.data.uri.URIDataValue;
 import org.knime.core.node.ExecutionContext;
 import org.knime.knip.base.data.img.ImgPlusCell;
 import org.knime.knip.base.data.img.ImgPlusCellFactory;
 import org.knime.knip.io.ScifioImgSource2;
 import org.knime.knip.io.nodes.imgreader3.ImgReaderSettings.ColumnCreationMode;
 import org.knime.knip.io.nodes.imgreader3.ImgReaderSettings.MetadataMode;
-
-import net.imagej.ImgPlus;
-import net.imglib2.img.ImgFactory;
-import net.imglib2.type.NativeType;
-import net.imglib2.type.numeric.RealType;
 
 /**
  * This class provides an unified way to read images for the different image
@@ -43,32 +44,31 @@ public class ScifioImgReader<T extends RealType<T> & NativeType<T>> {
 	private final ColumnCreationMode columnCreationMode;
 	private boolean appendSeriesNumber;
 
-	// public ScifioImgReader(ImgFactory<T> imgFactory, boolean checkFileFormat,
-	// SCIFIOConfig config,
-	// ExecutionContext exec) {
-	// this(imgFactory, checkFileFormat, config, exec, null, 0); // FIXME
-	// }
-	//
-	// /**
-	// * Creates a ScifioReader that uses a remote connection
-	// *
-	// * @param imgFactory
-	// * @param checkFileFormat
-	// * @param config
-	// * @param connectionInfo
-	// * @param uriColumnIdx
-	// */
-	// public ScifioImgReader(ImgFactory<T> imgFactory, boolean checkFileFormat,
-	// SCIFIOConfig config,
-	// ExecutionContext exec, ConnectionInformation connectionInfo, int
-	// uriColumnIdx) {
-	//
-	// this.connectionInfo = connectionInfo;
-	// this.exec = exec;
-	// this.uriColumnIdx = uriColumnIdx;
-	// source = new ScifioImgSource2(imgFactory, checkFileFormat, config);
-	// cellFactory = new ImgPlusCellFactory(exec);
-	// }
+	public ScifioImgReader(ImgFactory<T> imgFactory, boolean checkFileFormat, SCIFIOConfig config,
+			ExecutionContext exec) {
+		this(imgFactory, checkFileFormat, config, exec, null, 0); // FIXME
+	}
+
+	/**
+	 * Creates a ScifioReader that uses a remote connection
+	 *
+	 * @param imgFactory
+	 * @param checkFileFormat
+	 * @param config
+	 * @param connectionInfo
+	 * @param uriColumnIdx
+	 */
+	public ScifioImgReader(ImgFactory<T> imgFactory, boolean checkFileFormat, SCIFIOConfig config,
+			ExecutionContext exec, ConnectionInformation connectionInfo, int uriColumnIdx, MetadataMode metaDataMode) {
+
+		this.imgFactory = imgFactory;
+		this.connectionInfo = connectionInfo;
+		this.exec = exec;
+		this.uriColumnIdx = uriColumnIdx;
+		this.metaDataMode = metaDataMode;
+		source = new ScifioImgSource2(imgFactory, checkFileFormat, config);
+		cellFactory = new ImgPlusCellFactory(exec);
+	}
 
 	public ScifioReadResult<T> read(final URI uri) {
 
@@ -89,14 +89,11 @@ public class ScifioImgReader<T extends RealType<T> & NativeType<T>> {
 			if (readImages) {
 				imgs = source.readImgs(uri);
 			}
-			if (appendSeriesNumber){
-				source.ser
-			}
 
-			// rows = makeRows(readImages, row, colMode);
 		} catch (final Exception e) {
 			return new ScifioReadResult<>(Collections.emptyList(), Optional.of(e));
 		}
+		// rows = makeRows(readImages, imgs, colMode);
 
 		// } else {
 		// TODO Use new SCIFIO Location API
@@ -172,13 +169,13 @@ public class ScifioImgReader<T extends RealType<T> & NativeType<T>> {
 			return this;
 		}
 
+		public ScifioImgReader<T> build() {
+			return new ScifioImgReader<>(this);
+		}
+
 		public ScifioReaderBuilder<T> appendSeriesNumber(boolean appendSeriesNumber) {
 			this.appendSeriesNumber = appendSeriesNumber;
 			return this;
-		}
-
-		public ScifioImgReader<T> build() {
-			return new ScifioImgReader<>(this);
 		}
 	}
 
